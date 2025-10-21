@@ -43,6 +43,9 @@ captures/
 .cxx/
 *.log
 
+# Opencv lib
+opencv/
+
 # =================================to_start_of_parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_capture_status" />
 
