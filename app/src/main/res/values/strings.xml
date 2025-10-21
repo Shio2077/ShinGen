@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">神原</string>
+    <string name="accessibility_service_label">原神剧情辅助点击器</string>
+    <string name="accessibility_service_description">本服务用于帮助您快速完成某些操作。所有功能均需您手动启用。</string>
+</resources>
