@@ -4,7 +4,7 @@
 
 ## 安装和使用
 
-- 最低支持安卓13。
+- 系统最低支持安卓12。
 
 - 需要使用Shizuku来实现安卓的模拟点击，所以你需要安装Shizuku并且开启Shizuku服务才能使用模拟点击……
 
@@ -18,7 +18,7 @@ Currently, it only has the conversation function. Picking up items in Genshin Im
 
 ## Installation and Usage
 
-- Minimum support for Android 13.
+- OS: Android 12+
 
 - Requires Shizuku to implement simulated clicks on Android, so you need to install Shizuku and enable the Shizuku service to use simulated clicks...
 
