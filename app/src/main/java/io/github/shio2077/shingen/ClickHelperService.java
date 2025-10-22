@@ -2,8 +2,6 @@ package io.github.shio2077.shingen;
 
 import android.os.RemoteException;
 
-import io.github.shio2077.shingen.IAdbClickService;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,6 +10,7 @@ public class ClickHelperService extends IAdbClickService.Stub {
 
     @Override
     public void destroy() throws RemoteException {
+        // Since the service is running in a separate process, we exit the process when the service is destroyed.
         System.exit(0);
     }
 
@@ -35,14 +34,14 @@ public class ClickHelperService extends IAdbClickService.Stub {
     /**
      * 读取执行结果，如果有异常会向上抛
      */
-    public String readResult(Process process) throws IOException, InterruptedException {
+    private String readResult(Process process) throws IOException, InterruptedException {
         StringBuilder stringBuilder = new StringBuilder();
-        // 读取执行结果
         InputStreamReader inputStreamReader = new InputStreamReader(process.getInputStream());
-        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-        String line;
-        while ((line = bufferedReader.readLine()) != null) {
-            stringBuilder.append(line).append("\n");
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                stringBuilder.append(line).append("\n");
+            }
         }
         inputStreamReader.close();
         process.waitFor();

@@ -117,8 +117,8 @@ public class MediaProjectionService extends Service {
 
     private Notification createNotification() {
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("OpenCVTrail Service")
-                .setContentText("Screen capture and analysis is active.")
+                .setContentTitle("Genshin Clicker Helper Service")
+                .setContentText("Screen capturing is active.")
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setOngoing(true)
                 .build();

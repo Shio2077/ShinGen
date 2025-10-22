@@ -1,4 +1,4 @@
-package com.example.shingen;
+package github.shio2077.shingen;
 
 import org.junit.Test;
 

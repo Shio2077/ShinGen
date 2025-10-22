@@ -18,7 +18,6 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
 import android.view.WindowManager;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;

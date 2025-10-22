@@ -1,5 +1,6 @@
 package io.github.shio2077.shingen;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -10,11 +11,9 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
-import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -22,7 +21,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
@@ -95,6 +93,15 @@ public class MainActivity extends AppCompatActivity implements ScreenCaptureHelp
         runOnUiThread(this::updateShizukuStatus);
     };
 
+    private void requestNotificationPermission(){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+                    PackageManager.PERMISSION_GRANTED) {
+                // 请求权限
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 102); // 使用一个唯一的请求码
+            }
+        }
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,6 +118,7 @@ public class MainActivity extends AppCompatActivity implements ScreenCaptureHelp
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         NotificationUtils.createNotificationChannel(this);
+        requestNotificationPermission();
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());

@@ -1,4 +1,4 @@
-package com.example.shingen;
+package io.github.shio2077.shingen;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.example.opencvtrail", appContext.getPackageName());
+        assertEquals("io.github.shio2077.shingen", appContext.getPackageName());
     }
 }
