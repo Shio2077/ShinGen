@@ -6,7 +6,7 @@
 
 - 系统最低支持安卓12。
 
-- 需要使用 [Shizuku](https://shizuku.rikka.app/download/) 来实现安卓的模拟点击，所以你需要下载安装 [Shizuku](https://shizuku.rikka.app/download/)并且开启Shizuku服务才能使用模拟点击。[Shizuku教程](https://shizuku.rikka.app/guide/setup/)请自行搜索
+- 需要使用 [Shizuku](https://shizuku.rikka.app/download/) 来实现安卓的模拟点击，所以你需要下载安装 [Shizuku](https://shizuku.rikka.app/download/)并且开启Shizuku服务才能使用模拟点击。[Shizuku教程](https://shizuku.rikka.app/guide/setup/)
 
 - 需要留意手机温度防止过热……
 
