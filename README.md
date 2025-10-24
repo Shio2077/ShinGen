@@ -1,6 +1,6 @@
 # 安卓原神自动对话点击器
 
-目前只有对话功能~手机原神的拾取比电脑方便，没什么做的动力呢……
+目前只有点击对话功能，当出现对话窗口的眼睛图案时自动点击屏幕中心，当有对话气泡时点击气泡~手机原神的拾取比电脑方便，没什么做的动力呢……
 
 ## 安装和使用
 
@@ -18,7 +18,7 @@
 
 # Genshin Impact Auto-Conversation Clicker on Android
 
-Currently, it only has the conversation clicking function. Picking up items in Genshin Impact on mobile is more convenient than on a desktop, so I don't have much motivation to do it...
+Currently, it only has the conversation clicking function, when the "eye" pattern appearing the APP should click center of the game interface; when conversation "bubble" pattern apperaing the bubble will be clicked. Picking up items in Genshin Impact on mobile is more convenient than on a desktop, so I don't have much motivation to do it...
 
 ## Installation and Usage
 
