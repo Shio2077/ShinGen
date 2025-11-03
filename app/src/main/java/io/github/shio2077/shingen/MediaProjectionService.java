@@ -40,7 +40,7 @@ public class MediaProjectionService extends Service {
             Log.d(TAG, "AdbClickService connected.");
         }
 
-        @Override
+       @Override
         public void onServiceDisconnected(ComponentName name) {
             adbClickService = null;
             Log.d(TAG, "AdbClickService disconnected.");

@@ -24,13 +24,17 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class ScreenCaptureHelper {
@@ -54,6 +58,8 @@ public class ScreenCaptureHelper {
 
     private Mat eyeTemplate;
     private Mat bubbleTemplate;
+    private Mat chestTemplate;
+    private List<Mat> channels;
 
     public MediaProjection getMediaProjection() {
         return instance != null ? instance.mediaProjection : null;
@@ -99,6 +105,9 @@ public class ScreenCaptureHelper {
         }
         eyeTemplate = loadTemplateFromAssets("eye.jpg");
         bubbleTemplate = loadTemplateFromAssets("bubble.jpg");
+        chestTemplate = Imgcodecs.imread("chest_mask.png", Imgcodecs.IMREAD_UNCHANGED);//loadTemplateFromAssets("chest_mask.png");
+        channels = new ArrayList<>();
+        Core.split(chestTemplate, channels);
     }
 
     private Mat loadTemplateFromAssets(String fileName) {
@@ -186,7 +195,7 @@ public class ScreenCaptureHelper {
     private class ImageAvailableListener implements ImageReader.OnImageAvailableListener {
         private final Handler mainHandler = new Handler(Looper.getMainLooper());
         private long lastTime = 0;
-        private static final long INTERVAL = 200; // 200ms interval
+        private static final long INTERVAL = 400; // 200ms interval
 
         @Override
         public void onImageAvailable(ImageReader reader) {
@@ -215,12 +224,14 @@ public class ScreenCaptureHelper {
 
     private void processScreenshot(Bitmap sceneBitmap) {
         Mat sceneGray = new Mat();
+        Mat mask = channels.get(3);
         Utils.bitmapToMat(sceneBitmap, sceneGray);
         Imgproc.cvtColor(sceneGray, sceneGray, Imgproc.COLOR_BGRA2GRAY);
 
         try {
             // Condition 1: Check for eye
             Point eyeCenter = findTemplate(sceneGray, eyeTemplate, 0.80);
+            Point chestCenter = findMask(sceneGray, chestTemplate, 0.75);
 
             if (eyeCenter != null) {
                 // Branch 1, True: Eye found, now check for bubble
@@ -246,8 +257,38 @@ public class ScreenCaptureHelper {
                 // Branch 1, False: Eye not found
                 // No action performed
             }
+            if (chestCenter != null){
+                Log.d(OPENCV_TAG, "Chest found");
+                broadcastClickRequest((int) chestCenter.x, (int) chestCenter.y);
+                Log.d(OPENCV_TAG, "Chest center clicked at pos (" + (int)chestCenter.x + ", "+ (int)chestCenter.y +")");
+            }
         } finally {
             sceneGray.release();
+        }
+    }
+    public static Point findMask(Mat sceneGray, Mat templateGray, double threshold) {
+        // 1. 结果矩阵的尺寸 = scene - template + 1
+        int resultCols = sceneGray.cols() - templateGray.cols() + 1;
+        int resultRows = sceneGray.rows() - templateGray.rows() + 1;
+        Mat result = new Mat(resultRows, resultCols, CvType.CV_32FC1);
+
+        // 2. 执行模板匹配
+        Imgproc.matchTemplate(sceneGray, templateGray, result, Imgproc.TM_CCOEFF_NORMED);
+
+        // 3. 查找最大匹配位置
+        Core.MinMaxLocResult mmr = Core.minMaxLoc(result);
+        Point matchLoc = mmr.maxLoc; // 最大值的位置
+        double maxVal = mmr.maxVal;  // 最大相似系数
+
+        // 4. 判断是否超过阈值
+        if (maxVal >= threshold) {
+            // 匹配区域的中心点坐标
+            double centerX = matchLoc.x + templateGray.cols() / 2.0;
+            double centerY = matchLoc.y + templateGray.rows() / 2.0;
+            return new Point(centerX, centerY);
+        } else {
+            // 没有匹配到
+            return null;
         }
     }
 
