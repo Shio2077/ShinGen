@@ -27,14 +27,11 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 public class ScreenCaptureHelper {
@@ -48,6 +45,7 @@ public class ScreenCaptureHelper {
 
     private static final String TAG = "ScreenCaptureHelper";
     private static final String OPENCV_TAG = "OpenCV";
+    private static final String OPENCV_DEBUG_TAG = "OpenCVDebug";
 
     private MediaProjectionManager projectionManager;
     private MediaProjection mediaProjection;
@@ -57,9 +55,8 @@ public class ScreenCaptureHelper {
     private final Random random = new Random();
 
     private Mat eyeTemplate;
-    private Mat bubbleTemplate;
     private Mat chestTemplate;
-    private List<Mat> channels;
+    private Mat bubbleTemplate;
 
     public MediaProjection getMediaProjection() {
         return instance != null ? instance.mediaProjection : null;
@@ -104,10 +101,9 @@ public class ScreenCaptureHelper {
             return;
         }
         eyeTemplate = loadTemplateFromAssets("eye.jpg");
+        chestTemplate = loadTemplateFromAssets("chest.png");
+        Log.d(OPENCV_DEBUG_TAG, "chestTemplate: channels=" + chestTemplate.channels() + ", type=" + chestTemplate.type());
         bubbleTemplate = loadTemplateFromAssets("bubble.jpg");
-        chestTemplate = Imgcodecs.imread("chest_mask.png", Imgcodecs.IMREAD_UNCHANGED);//loadTemplateFromAssets("chest_mask.png");
-        channels = new ArrayList<>();
-        Core.split(chestTemplate, channels);
     }
 
     private Mat loadTemplateFromAssets(String fileName) {
@@ -115,17 +111,40 @@ public class ScreenCaptureHelper {
         Mat template = new Mat();
         try (InputStream is = assetManager.open(fileName)) {
             Bitmap bitmap = BitmapFactory.decodeStream(is);
-            Utils.bitmapToMat(bitmap, template);
-            Imgproc.cvtColor(template, template, Imgproc.COLOR_BGRA2GRAY);
-            Log.d(OPENCV_TAG, "Loaded template from assets: " + fileName);
-            if (!bitmap.isRecycled()) {
-                bitmap.recycle();
+            if (bitmap == null) {
+                Log.e(OPENCV_TAG, "Failed to decode asset: " + fileName);
+                return template;
             }
+
+            Utils.bitmapToMat(bitmap, template);
+
+            // ⭐ 强制转成 8 位无符号（防止CV_32S）
+            if (template.depth() != CvType.CV_8U) {
+                template.convertTo(template, CvType.CV_8U);
+                Log.w(OPENCV_TAG, fileName + " depth corrected to CV_8U");
+            }
+
+            // ⭐ 再转成BGR三通道
+            if (template.channels() == 4) {
+                Imgproc.cvtColor(template, template, Imgproc.COLOR_BGRA2BGR);
+            } else if (template.channels() == 1) {
+                Imgproc.cvtColor(template, template, Imgproc.COLOR_GRAY2BGR);
+            }
+
+            Log.d(OPENCV_TAG, "Loaded template from assets: " + fileName +
+                    ", channels=" + template.channels() + ", type=" + template.type());
+
+            if (!bitmap.isRecycled()) bitmap.recycle();
+
         } catch (IOException e) {
             Log.e(OPENCV_TAG, "Error loading template: " + fileName, e);
         }
+
         return template;
     }
+
+
+
 
     public boolean isCapturing() {
         return isCapturing;
@@ -195,7 +214,7 @@ public class ScreenCaptureHelper {
     private class ImageAvailableListener implements ImageReader.OnImageAvailableListener {
         private final Handler mainHandler = new Handler(Looper.getMainLooper());
         private long lastTime = 0;
-        private static final long INTERVAL = 400; // 200ms interval
+        private static final long INTERVAL = 200; // 200ms interval
 
         @Override
         public void onImageAvailable(ImageReader reader) {
@@ -224,14 +243,32 @@ public class ScreenCaptureHelper {
 
     private void processScreenshot(Bitmap sceneBitmap) {
         Mat sceneGray = new Mat();
-        Mat mask = channels.get(3);
+        Mat sceneBgr = new Mat();
         Utils.bitmapToMat(sceneBitmap, sceneGray);
-        Imgproc.cvtColor(sceneGray, sceneGray, Imgproc.COLOR_BGRA2GRAY);
-
+        Utils.bitmapToMat(sceneBitmap, sceneBgr);
+        if (sceneGray.depth() != CvType.CV_8U) {
+            sceneGray.convertTo(sceneGray, CvType.CV_8U);
+        }
+        if (sceneBgr.depth() != CvType.CV_8U) {
+            sceneBgr.convertTo(sceneBgr, CvType.CV_8U);
+        }
+        if (sceneGray.channels() == 4) {
+            Imgproc.cvtColor(sceneGray, sceneGray, Imgproc.COLOR_BGRA2BGR);
+        }
+        if (sceneBgr.channels() == 4) {
+            Imgproc.cvtColor(sceneBgr, sceneBgr, Imgproc.COLOR_BGRA2BGR);
+        }
         try {
             // Condition 1: Check for eye
             Point eyeCenter = findTemplate(sceneGray, eyeTemplate, 0.80);
-            Point chestCenter = findMask(sceneGray, chestTemplate, 0.75);
+
+            // Additional condition: Check for chest at any cycle
+            // Chest icon will never showup with conversation icon/bubble in same time
+            Point chestCenter = findTemplate(sceneBgr, chestTemplate, 0.80);
+            if(chestCenter != null && chestCenter.x > 600){
+                Log.d(OPENCV_TAG, "Treasure chest found. Clicking chest icon bubble at (" + (int)chestCenter.x + ", " + (int)chestCenter.y + ").");
+                broadcastClickRequest((int)chestCenter.x, (int)chestCenter.y);
+            }
 
             if (eyeCenter != null) {
                 // Branch 1, True: Eye found, now check for bubble
@@ -257,48 +294,18 @@ public class ScreenCaptureHelper {
                 // Branch 1, False: Eye not found
                 // No action performed
             }
-            if (chestCenter != null){
-                Log.d(OPENCV_TAG, "Chest found");
-                broadcastClickRequest((int) chestCenter.x, (int) chestCenter.y);
-                Log.d(OPENCV_TAG, "Chest center clicked at pos (" + (int)chestCenter.x + ", "+ (int)chestCenter.y +")");
-            }
         } finally {
             sceneGray.release();
         }
     }
-    public static Point findMask(Mat sceneGray, Mat templateGray, double threshold) {
-        // 1. 结果矩阵的尺寸 = scene - template + 1
-        int resultCols = sceneGray.cols() - templateGray.cols() + 1;
-        int resultRows = sceneGray.rows() - templateGray.rows() + 1;
-        Mat result = new Mat(resultRows, resultCols, CvType.CV_32FC1);
 
-        // 2. 执行模板匹配
-        Imgproc.matchTemplate(sceneGray, templateGray, result, Imgproc.TM_CCOEFF_NORMED);
-
-        // 3. 查找最大匹配位置
-        Core.MinMaxLocResult mmr = Core.minMaxLoc(result);
-        Point matchLoc = mmr.maxLoc; // 最大值的位置
-        double maxVal = mmr.maxVal;  // 最大相似系数
-
-        // 4. 判断是否超过阈值
-        if (maxVal >= threshold) {
-            // 匹配区域的中心点坐标
-            double centerX = matchLoc.x + templateGray.cols() / 2.0;
-            double centerY = matchLoc.y + templateGray.rows() / 2.0;
-            return new Point(centerX, centerY);
-        } else {
-            // 没有匹配到
-            return null;
-        }
-    }
-
-    private Point findTemplate(Mat sceneGray, Mat template, double threshold) {
-        if (template == null || template.empty() || sceneGray.empty()) return null;
-        if (sceneGray.cols() < template.cols() || sceneGray.rows() < template.rows()) return null;
+    private Point findTemplate(Mat sceneTemp, Mat template, double threshold) {
+        if (template == null || template.empty() || sceneTemp.empty()) return null;
+        if (sceneTemp.cols() < template.cols() || sceneTemp.rows() < template.rows()) return null;
 
         Mat result = new Mat();
         try {
-            Imgproc.matchTemplate(sceneGray, template, result, Imgproc.TM_CCOEFF_NORMED);
+            Imgproc.matchTemplate(sceneTemp, template, result, Imgproc.TM_CCOEFF_NORMED);
             Core.MinMaxLocResult mmr = Core.minMaxLoc(result);
 
             if (mmr.maxVal >= threshold) {
