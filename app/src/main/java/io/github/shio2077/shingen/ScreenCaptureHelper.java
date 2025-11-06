@@ -100,13 +100,13 @@ public class ScreenCaptureHelper {
             Log.e(TAG, "Context is null, cannot load templates.");
             return;
         }
-        eyeTemplate = loadTemplateFromAssets("eye.jpg");
-        chestTemplate = loadTemplateFromAssets("chest.png");
+        eyeTemplate = loadTemplateFromAssets("eye.jpg", true);
+        chestTemplate = loadTemplateFromAssets("chest.png", false);
         Log.d(OPENCV_DEBUG_TAG, "chestTemplate: channels=" + chestTemplate.channels() + ", type=" + chestTemplate.type());
-        bubbleTemplate = loadTemplateFromAssets("bubble.jpg");
+        bubbleTemplate = loadTemplateFromAssets("bubble.jpg", true);
     }
 
-    private Mat loadTemplateFromAssets(String fileName) {
+    private Mat loadTemplateFromAssets(String fileName, boolean asGray) {
         AssetManager assetManager = context.getAssets();
         Mat template = new Mat();
         try (InputStream is = assetManager.open(fileName)) {
@@ -124,11 +124,19 @@ public class ScreenCaptureHelper {
                 Log.w(OPENCV_TAG, fileName + " depth corrected to CV_8U");
             }
 
-            // ⭐ 再转成BGR三通道
-            if (template.channels() == 4) {
-                Imgproc.cvtColor(template, template, Imgproc.COLOR_BGRA2BGR);
-            } else if (template.channels() == 1) {
-                Imgproc.cvtColor(template, template, Imgproc.COLOR_GRAY2BGR);
+            // ⭐ Convert to gray or BGR
+            if (asGray) {
+                if (template.channels() == 4) {
+                    Imgproc.cvtColor(template, template, Imgproc.COLOR_BGRA2GRAY);
+                } else if (template.channels() == 3) {
+                    Imgproc.cvtColor(template, template, Imgproc.COLOR_BGR2GRAY);
+                }
+            } else {
+                if (template.channels() == 4) {
+                    Imgproc.cvtColor(template, template, Imgproc.COLOR_BGRA2BGR);
+                } else if (template.channels() == 1) {
+                    Imgproc.cvtColor(template, template, Imgproc.COLOR_GRAY2BGR);
+                }
             }
 
             Log.d(OPENCV_TAG, "Loaded template from assets: " + fileName +
@@ -242,23 +250,21 @@ public class ScreenCaptureHelper {
     }
 
     private void processScreenshot(Bitmap sceneBitmap) {
+        Mat sceneRgba = new Mat();
         Mat sceneGray = new Mat();
         Mat sceneBgr = new Mat();
-        Utils.bitmapToMat(sceneBitmap, sceneGray);
-        Utils.bitmapToMat(sceneBitmap, sceneBgr);
-        if (sceneGray.depth() != CvType.CV_8U) {
-            sceneGray.convertTo(sceneGray, CvType.CV_8U);
-        }
-        if (sceneBgr.depth() != CvType.CV_8U) {
-            sceneBgr.convertTo(sceneBgr, CvType.CV_8U);
-        }
-        if (sceneGray.channels() == 4) {
-            Imgproc.cvtColor(sceneGray, sceneGray, Imgproc.COLOR_BGRA2BGR);
-        }
-        if (sceneBgr.channels() == 4) {
-            Imgproc.cvtColor(sceneBgr, sceneBgr, Imgproc.COLOR_BGRA2BGR);
-        }
         try {
+            Utils.bitmapToMat(sceneBitmap, sceneRgba);
+
+            // Ensure depth is CV_8U, which is expected for RGBA images from bitmap
+            if (sceneRgba.depth() != CvType.CV_8U) {
+                sceneRgba.convertTo(sceneRgba, CvType.CV_8U);
+            }
+
+            // Create BGR and Grayscale Mats for template matching
+            Imgproc.cvtColor(sceneRgba, sceneBgr, Imgproc.COLOR_RGBA2BGR);
+            Imgproc.cvtColor(sceneRgba, sceneGray, Imgproc.COLOR_RGBA2GRAY);
+
             // Condition 1: Check for eye
             Point eyeCenter = findTemplate(sceneGray, eyeTemplate, 0.80);
 
@@ -295,7 +301,9 @@ public class ScreenCaptureHelper {
                 // No action performed
             }
         } finally {
+            sceneRgba.release();
             sceneGray.release();
+            sceneBgr.release();
         }
     }
 
@@ -330,7 +338,7 @@ public class ScreenCaptureHelper {
         Image.Plane[] planes = image.getPlanes();
         ByteBuffer buffer = planes[0].getBuffer();
         int pixelStride = planes[0].getPixelStride();
-        int rowStride = rowStride = planes[0].getRowStride();
+        int rowStride = planes[0].getRowStride();
         int rowPadding = rowStride - pixelStride * image.getWidth();
 
         Bitmap tempBitmap = Bitmap.createBitmap(image.getWidth() + rowPadding / pixelStride, image.getHeight(), Bitmap.Config.ARGB_8888);
