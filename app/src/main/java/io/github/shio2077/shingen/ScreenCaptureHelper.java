@@ -58,6 +58,8 @@ public class ScreenCaptureHelper {
     private Mat chestTemplate;
     private Mat bubbleTemplate;
 
+    private static final long INTERVAL = 300; // 200ms interval
+
     public MediaProjection getMediaProjection() {
         return instance != null ? instance.mediaProjection : null;
     }
@@ -222,7 +224,6 @@ public class ScreenCaptureHelper {
     private class ImageAvailableListener implements ImageReader.OnImageAvailableListener {
         private final Handler mainHandler = new Handler(Looper.getMainLooper());
         private long lastTime = 0;
-        private static final long INTERVAL = 200; // 200ms interval
 
         @Override
         public void onImageAvailable(ImageReader reader) {
@@ -274,6 +275,13 @@ public class ScreenCaptureHelper {
             if(chestCenter != null && chestCenter.x > 600){
                 Log.d(OPENCV_TAG, "Treasure chest found. Clicking chest icon bubble at (" + (int)chestCenter.x + ", " + (int)chestCenter.y + ").");
                 broadcastClickRequest((int)chestCenter.x, (int)chestCenter.y);
+                long _lastTime = System.currentTimeMillis();
+                long _now = System.currentTimeMillis();
+                while(_now - _lastTime < INTERVAL){
+                    _now = System.currentTimeMillis();
+                }
+                Log.d(OPENCV_TAG, "Click space to pickup treasure at (" + (int)(chestCenter.x - 100)+ ", " + (int)chestCenter.y + ")");
+                broadcastClickRequest((int)(chestCenter.x - 100), (int)chestCenter.y);
             }
 
             if (eyeCenter != null) {

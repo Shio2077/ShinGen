@@ -1,6 +1,7 @@
 package io.github.shio2077.shingen;
 
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -24,6 +25,7 @@ public class MediaProjectionService extends Service {
 
     public static final String EXTRA_RESULT_CODE = "result_code";
     public static final String EXTRA_RESULT_DATA = "result_data";
+    public static final String ACTION_STOP_SERVICE = "io.github.shio2077.shingen.ACTION_STOP_SERVICE";
 
     private static final String TAG = "MediaProjectionService";
     private static final int NOTIFICATION_ID = 1001;
@@ -79,6 +81,12 @@ public class MediaProjectionService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null && ACTION_STOP_SERVICE.equals(intent.getAction())) {
+            Log.d(TAG, "Stopping service via notification action.");
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+
         if (intent == null) {
             Log.e(TAG, "Intent is null, stopping service.");
             stopSelf();
@@ -116,11 +124,16 @@ public class MediaProjectionService extends Service {
     }
 
     private Notification createNotification() {
+        Intent stopIntent = new Intent(this, MediaProjectionService.class);
+        stopIntent.setAction(ACTION_STOP_SERVICE);
+        PendingIntent stopPendingIntent = PendingIntent.getService(this, 0, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Genshin Clicker Helper Service")
                 .setContentText("Screen capturing is active.")
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setOngoing(true)
+                .addAction(R.drawable.ic_launcher_foreground, "Stop Service", stopPendingIntent)
                 .build();
     }
 
