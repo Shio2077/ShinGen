@@ -1,15 +1,15 @@
 # 安卓原神自动对话点击器
 
-~~目前只有点击对话功能~~V1.2版本加入了已解锁的宝箱自动开启和拾起掉落物的功能；
-当出现对话窗口的眼睛图案时自动点击屏幕中心，当有对话气泡时点击气泡~
+~~目前只有点击对话功能~~V1.2版本加入了当角色走到宝箱前自动开启和拾起掉落物的功能；
+当出现对话窗口的眼睛图案时自动点击屏幕中心以快进对话，当有对话气泡时点击气泡~
 
 ## 安装和使用
 
 - 系统最低支持安卓12。
 
-- 需要使用 [Shizuku](https://shizuku.rikka.app/download/) 来实现安卓的模拟点击，所以你需要下载安装 [Shizuku](https://shizuku.rikka.app/download/)并且开启Shizuku服务才能使用模拟点击。[Shizuku教程](https://shizuku.rikka.app/guide/setup/)
+- 需要使用 [Shizuku](https://shizuku.rikka.app/download/) 来实现安卓的模拟点击，所以你需要先下载安装 [Shizuku](https://shizuku.rikka.app/download/)并且开启Shizuku服务才能使用模拟点击。[Shizuku教程](https://shizuku.rikka.app/guide/setup/)
 
-- 需要留意手机温度防止过热……
+- **需要留意手机温度防止过热!**
 
 ## 原理
 
@@ -19,8 +19,8 @@
 
 # Genshin Impact Auto-Conversation Clicker on Android
 
-~~Currently, it only has the conversation clicking function,~~Version 1.2 adds the function of automatically opening unlocked treasure chests and picking up dropped items;
-When the "eye" pattern appearing the APP should click center of the game interface; when conversation "bubble" pattern apperaing the bubble will be clicked. Picking up items in Genshin Impact on mobile is more convenient than on a desktop, so I don't have much motivation to do it...
+~~Currently, it only has the conversation clicking function,~~Version 1.2 adds the function of automatically opening unlocked treasure chests and picking up dropped items when character move close to chest;
+When the "eye" pattern appearing the APP should click center of the game interface to pass conversation; when conversation "bubble" pattern apperaing the bubble will be clicked. Picking up items in Genshin Impact on mobile is more convenient than on a desktop, so I don't have much motivation to do it...
 
 ## Installation and Usage
 
@@ -28,7 +28,7 @@ When the "eye" pattern appearing the APP should click center of the game interfa
 
 - Requires  [Shizuku](https://shizuku.rikka.app/download/) to implement simulated clicks on Android, so you need to install  [Shizuku](https://shizuku.rikka.app/download/) and enable the Shizuku service to use simulated clicks. [Shizuku tutorial](https://shizuku.rikka.app/guide/setup/)
 
-- Pay attention to your phone temperature...
+- **Pay attention to your phone temperature!**
 
 ## The way it’s implemented
 
