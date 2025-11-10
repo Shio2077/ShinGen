@@ -1,6 +1,6 @@
 # 安卓原神自动对话点击器
 
-~~目前只有点击对话功能~~V1.2版本加入了当角色走到宝箱前自动开启和拾起掉落物的功能；
+V1.2版本加入了当角色走到宝箱前自动开启和拾起掉落物的功能；
 当出现对话窗口的眼睛图案时自动点击屏幕中心以快进对话，当有对话气泡时点击气泡~
 
 ## 安装和使用
@@ -17,9 +17,11 @@
 
 项目使用了OpenCV官方提供的安卓[SDK-4.12.0](https://opencv.org/releases/)。
 
+图标使用了Pixiv pid:136095851的AI图。
+
 # Genshin Impact Auto-Conversation Clicker on Android
 
-~~Currently, it only has the conversation clicking function,~~Version 1.2 adds the function of automatically opening unlocked treasure chests and picking up dropped items when character move close to chest;
+Version 1.2 adds the function of automatically opening unlocked treasure chests and picking up dropped items when character move close to chest;
 When the "eye" pattern appearing the APP should click center of the game interface to pass conversation; when conversation "bubble" pattern apperaing the bubble will be clicked. Picking up items in Genshin Impact on mobile is more convenient than on a desktop, so I don't have much motivation to do it...
 
 ## Installation and Usage
@@ -35,3 +37,5 @@ When the "eye" pattern appearing the APP should click center of the game interfa
 Share your screen to this app and use the OpenCV service to identify the conversation window. If the conditions are met, use the ADB shell command to send a simulated click command.
 
 Project uses Android OpenCV SDK. Click [here](https://opencv.org/releases/) to get OpenCV SDK 4.12.0
+
+The icon uses an AI-generated image from Pixiv, pid:136095851.
