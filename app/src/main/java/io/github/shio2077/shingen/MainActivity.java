@@ -66,12 +66,9 @@ public class MainActivity extends AppCompatActivity implements ScreenCaptureHelp
 
     private final Shizuku.OnRequestPermissionResultListener requestPermissionResultListener = (requestCode, grantResult) -> {
         if (requestCode == SHIZUKU_PERMISSION_REQUEST_CODE) {
-            // The user has responded to the permission request.
             if (grantResult == PackageManager.PERMISSION_GRANTED) {
-                // If permission is granted, we can bind the service.
                 bindAdbClickService();
             } else {
-                // If permission is not granted, update the UI accordingly
                 updateShizukuStatus();
             }
         }
@@ -79,7 +76,6 @@ public class MainActivity extends AppCompatActivity implements ScreenCaptureHelp
 
     private final Shizuku.OnBinderReceivedListener binderReceivedListener = () -> {
         Log.d(TAG, "Shizuku binder received.");
-        // Use runOnUiThread to ensure UI operations are on the main thread.
         runOnUiThread(() -> {
             updateShizukuStatus();
             if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
@@ -95,13 +91,12 @@ public class MainActivity extends AppCompatActivity implements ScreenCaptureHelp
 
     private void requestNotificationPermission(){
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
-                    PackageManager.PERMISSION_GRANTED) {
-                // 请求权限
-                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 102); // 使用一个唯一的请求码
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 102);
             }
         }
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,8 +106,6 @@ public class MainActivity extends AppCompatActivity implements ScreenCaptureHelp
             Toast.makeText(this, "FATAL: OpenCV 加载失败", Toast.LENGTH_LONG).show();
             finish();
             return;
-        } else {
-            Log.d("OpenCV", "OpenCV library loaded successfully.");
         }
 
         EdgeToEdge.enable(this);
@@ -136,35 +129,34 @@ public class MainActivity extends AppCompatActivity implements ScreenCaptureHelp
         screenCaptureHelper.setOnScreenshotListener(this);
 
         btnStartCapture.setOnClickListener(v -> {
-            if (adbClickService == null) {
-                Toast.makeText(this, "Shizuku service is not connected.", Toast.LENGTH_LONG).show();
-                return;
+            if (screenCaptureHelper != null && screenCaptureHelper.isCapturing()) {
+                Intent serviceIntent = new Intent(this, MediaProjectionService.class);
+                stopService(serviceIntent);
+            } else {
+                if (adbClickService == null) {
+                    Toast.makeText(this, "Shizuku service is not connected.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                Intent intent = screenCaptureHelper.createScreenCaptureIntent();
+                startActivityForResult(intent, REQUEST_CODE_SCREEN_CAPTURE);
             }
-            Intent intent = screenCaptureHelper.createScreenCaptureIntent();
-            startActivityForResult(intent, REQUEST_CODE_SCREEN_CAPTURE);
         });
 
-        // The permission request should be sent only when the Shizuku binder is ready.
         btnRequestShizuku.setOnClickListener(v -> {
             if (Shizuku.pingBinder()) {
-                // If the binder is alive, request permission directly.
                 if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
                     Shizuku.requestPermission(SHIZUKU_PERMISSION_REQUEST_CODE);
                 } else {
-                    // Already has permission, maybe we need to re-bind the service.
                     bindAdbClickService();
                 }
             } else {
-                // Shizuku service is not running.
                 Toast.makeText(this, "Please start the Shizuku service first.", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Use the "sticky" version to get an immediate callback if the binder is already available.
         Shizuku.addBinderReceivedListenerSticky(binderReceivedListener);
         Shizuku.addBinderDeadListener(binderDeadListener);
         Shizuku.addRequestPermissionResultListener(requestPermissionResultListener);
-
 
         captureStatusReceiver = new BroadcastReceiver() {
             @Override
@@ -181,7 +173,7 @@ public class MainActivity extends AppCompatActivity implements ScreenCaptureHelp
     }
 
     private void bindAdbClickService() {
-        if (adbClickService != null) return; // Avoid binding multiple times
+        if (adbClickService != null) return;
         userServiceArgs = new Shizuku.UserServiceArgs(new ComponentName(this, ClickHelperService.class))
                 .daemon(false)
                 .debuggable(BuildConfig.DEBUG)
@@ -196,19 +188,16 @@ public class MainActivity extends AppCompatActivity implements ScreenCaptureHelp
             adbClickService = null;
             userServiceArgs = null;
         }
-
     }
 
     private void updateShizukuStatus() {
         String statusText;
-
         if (Shizuku.isPreV11()) {
             statusText = "Shizuku service not running or version too old.";
         } else if (Shizuku.pingBinder()) {
             try {
                 if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                     statusText = "✅ Shizuku Status: Authorized (Version " + Shizuku.getVersion() + ")";
-                    // Try to bind service if permission is granted, but not connected yet.
                     if(adbClickService == null) {
                         bindAdbClickService();
                     }
@@ -241,6 +230,7 @@ public class MainActivity extends AppCompatActivity implements ScreenCaptureHelp
 
     private void updateCaptureStatusText(boolean isCapturing) {
         tvCaptureStatus.setText(isCapturing ? "📷 Capture Status: Running" : "📷 Capture Status: Stopped");
+        btnStartCapture.setText(isCapturing ? "Stop Service" : "Start Screen Capture");
     }
 
     private void updateCaptureStatus() {
@@ -286,7 +276,6 @@ public class MainActivity extends AppCompatActivity implements ScreenCaptureHelp
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // It's important to remove listeners to avoid memory leaks.
         Shizuku.removeRequestPermissionResultListener(requestPermissionResultListener);
         Shizuku.removeBinderReceivedListener(binderReceivedListener);
         Shizuku.removeBinderDeadListener(binderDeadListener);

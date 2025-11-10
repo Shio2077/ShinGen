@@ -1,5 +1,3 @@
-// File: ScreenCaptureHelper.java
-
 package io.github.shio2077.shingen;
 
 import android.app.Activity;
@@ -58,7 +56,7 @@ public class ScreenCaptureHelper {
     private Mat chestTemplate;
     private Mat bubbleTemplate;
 
-    private static final long INTERVAL = 300; // 200ms interval
+    private static final long INTERVAL = 250; // 250ms interval
 
     public MediaProjection getMediaProjection() {
         return instance != null ? instance.mediaProjection : null;
@@ -175,6 +173,11 @@ public class ScreenCaptureHelper {
 
     public void startScreenCapture(int resultCode, Intent data) {
         Log.d(TAG, "startScreenCapture called");
+        if (isCapturing()) {
+            Log.d(TAG, "Screen capture is already running. Stopping the existing one first.");
+            stopScreenCapture();
+        }
+
         if (context == null || data == null) return;
 
         mediaProjection = projectionManager.getMediaProjection(resultCode, data);
