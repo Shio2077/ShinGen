@@ -22,7 +22,7 @@ V1.2版本加入了当角色走到宝箱前自动开启和拾起掉落物的功�
 # Genshin Impact Auto-Conversation Clicker on Android
 
 Version 1.2 adds the function of automatically opening unlocked treasure chests and picking up dropped items when character move close to chest;
-When the "eye" pattern appearing the APP should click center of the game interface to pass conversation; when conversation "bubble" pattern apperaing the bubble will be clicked. Picking up items in Genshin Impact on mobile is more convenient than on a desktop, so I don't have much motivation to do it...
+When the "eye" pattern appearing the APP should click center of the game interface to pass conversation; when conversation "bubble" pattern apperaing the bubble will be clicked.
 
 ## Installation and Usage
 
