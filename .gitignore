@@ -20,6 +20,7 @@ local.properties
 # Generated build directories
 build/
 app/build/
+app/release/
 
 # Generated APKs, AABs, and other build outputs
 *.apk
